@@ -41,7 +41,7 @@ int main() {
          cerr << "Nachricht zu lang!" << endl;
       } else if (input[0] == 'X' or input[0]== 'x') {
          return 0; 
-      } else if (input[0] == '+' || input[0] == '-') {
+      } else if (input[0] == '+' || input[0] == '-' || input[0] == '*' || input[0] == '/') {
          correct_input = true;
       } else {
          cout << "Falsche eingabe" << endl;
