@@ -4,21 +4,23 @@
 #include <fcntl.h>
 #include <vector>
 #include <string>
+#include <cstring>
 #include <sys/mman.h>
 using namespace std;
+
+
 
 void copy(string from_file, string to_file) {
     int from, to;
     struct stat statbuf;
-    char* from_pointer;
-    char* to_pointer;
-    off_t from_size;
+    char *src, *dest;
+    off_t size;
 
-    if ((from = open(from_file.c_str(), O_RDONLY)) == -1) {
+    if ((from = open(from_file.c_str(), O_RDWR)) == -1) {
         perror("Error opening input file");
         exit(-1);
     }
-    if ((to = open(to_file.c_str(), O_CREAT | O_WRONLY, 0644)) == -1) {
+    if ((to = open(to_file.c_str(), O_CREAT | O_RDWR, 0644)) == -1) {
         perror("Error opening output file");
         exit(-1);
     }
@@ -27,29 +29,28 @@ void copy(string from_file, string to_file) {
         exit(-1);
     }
 
-    from_size = statbuf.st_size;
+    size = statbuf.st_size;
 
-    if (ftruncate(to, from_size) == -1) {
+    if (ftruncate(to, size) == -1) {
         perror("Error setting size of output file");
         exit(-1);
     }
     
-    if ((from_pointer = (char *) mmap(nullptr, from_size, PROT_READ, MAP_PRIVATE, from, 0)) == (char *) -1) {
+    if ((src = (char *) mmap(nullptr, size, PROT_READ, MAP_SHARED, from, 0)) == (void *) -1) { //muss das dann auch als char * sein?, bzw klappt es mit void* oder MAP_FAILED?
         perror("Error getting pointer to input file");
         exit(-1);
     }
-    if ((to_pointer = (char *) mmap(nullptr, from_size, PROT_WRITE, MAP_SHARED, to, 0)) == (void *) -1) {
+    if ((dest = (char *) mmap(nullptr, size, PROT_WRITE, MAP_SHARED, to, 0)) ==  (void *) -1) {
         perror("Error getting pointer to input file");
         exit(-1);
     }
 
-    // while (from_size > 0) {
-    //     *to_pointer = *from_pointer;
-    //     to_pointer++; from_pointer++;
-    //     from_size -= 1;
-    // }
+    while (size > 0) {
+        *dest = *src;
+        dest++; src++;
+        size -= 1;
+    }
 
-    printf("%s\n", from_pointer);
 
     close(to);
     close(from);
